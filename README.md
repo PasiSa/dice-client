@@ -1,4 +1,6 @@
-*TBD: this needs to be actually written*
+This is a simple TCP client using Qt Network APIs, to show the basic
+functions that sends a short string to server. It is based on
+(and modified) from Qt tutorial examples available at the Qt web site.
 
 # Building the code
 
