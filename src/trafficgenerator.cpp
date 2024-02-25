@@ -27,6 +27,13 @@ void TrafficGenerator::start()
 }
 
 
+void TrafficGenerator::stop()
+{
+    socket_->disconnectFromHost();
+    listener_.ShowMessage("Traffic Generator stopped");
+}
+
+
 void TrafficGenerator::handleConnected()
 {
     sendBatch();
@@ -64,6 +71,12 @@ void TrafficGenerator::handleWritten(qint64 bytes)
 void TrafficGenerator::sendBatch()
 {
     unsigned int b = bytes_;
+
+    if (socket_->state() == QAbstractSocket::UnconnectedState ||
+            socket_->state() == QAbstractSocket::ClosingState) {
+        // If socket is winding down (e.g. interrupted by user), do not send anymore.
+        return;
+    }
 
     // It is possible that one of the earlier writes was not able to send
     // full batch because of full send buffer, therefore we need to check

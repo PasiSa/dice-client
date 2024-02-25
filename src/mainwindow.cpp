@@ -7,8 +7,7 @@
 
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
+    : QMainWindow(parent), ui(new Ui::MainWindow), is_active_(false), generator_(nullptr)
 {
     ui->setupUi(this);
     connect(ui->connectButton, SIGNAL(clicked()), this, SLOT(handleConnectButton()));
@@ -23,7 +22,11 @@ MainWindow::~MainWindow()
 
 void MainWindow::handleConnectButton()
 {
-    startConnection();
+    if (!is_active_) {
+        startConnection();
+    } else {
+        stopConnection();
+    }
 }
 
 
@@ -53,9 +56,15 @@ void MainWindow::startConnection()
         return;
     }
 
-    ui->activityLabel->setText("Connection is active");
+    ui->activityLabel->setText("Traffic Generator is active");
     ui->activityLabel->setStyleSheet("color: green;");
+    ui->connectButton->setText("Stop");
+    is_active_ = true;
 
+    if (generator_) {
+        // just delete earlier generator if there was one already from previous run
+        delete generator_;
+    }
     generator_ = new TrafficGenerator(
             *this,
             QHostAddress(ui->addressEdit->text()),
@@ -67,11 +76,18 @@ void MainWindow::startConnection()
 }
 
 
+void MainWindow::stopConnection()
+{
+    generator_->stop();
+    ui->connectButton->setText("Start");
+    is_active_ = false;
+}
+
+
 void MainWindow::GeneratorFinished(QString message)
 {
     ui->activityLabel->setText("Generator Finished: " + message);
     ui->activityLabel->setStyleSheet("color: red;");
-    //delete generator_;
 }
 
 

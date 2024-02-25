@@ -58,6 +58,11 @@ public:
     */
     void start();
 
+    /**
+     * Stop generating traffic and close connection.
+    */
+    void stop();
+
 public slots:
     void onTimerTick();
 

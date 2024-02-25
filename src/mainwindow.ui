@@ -63,7 +63,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Connect</string>
+     <string>Start</string>
     </property>
    </widget>
    <widget class="QLabel" name="activityLabel">
@@ -79,7 +79,7 @@
      <string notr="true">color: red;</string>
     </property>
     <property name="text">
-     <string>Connection is not active</string>
+     <string>Traffic Generator is not active</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="addressEdit">

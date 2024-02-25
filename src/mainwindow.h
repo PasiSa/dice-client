@@ -29,8 +29,10 @@ public slots:
 
 private:
     void startConnection();
+    void stopConnection();
 
     Ui::MainWindow *ui;
     TrafficGenerator *generator_;
+    bool is_active_;
 };
 #endif // MAINWINDOW_H
