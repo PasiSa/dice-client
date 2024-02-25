@@ -88,6 +88,8 @@ void MainWindow::GeneratorFinished(QString message)
 {
     ui->activityLabel->setText("Generator Finished: " + message);
     ui->activityLabel->setStyleSheet("color: red;");
+    ui->connectButton->setText("Start");
+    is_active_ = false;
 }
 
 

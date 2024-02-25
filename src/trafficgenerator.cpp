@@ -23,6 +23,7 @@ TrafficGenerator::~TrafficGenerator()
 
 void TrafficGenerator::start()
 {
+    count_ = 0;
     socket_->connectToHost(address_, port_);
 }
 
