@@ -3,30 +3,34 @@
 
 #include <QMainWindow>
 #include <QTcpSocket>
+#include "trafficgenerator.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
 
-class MainWindow : public QMainWindow
+class MainWindow : public QMainWindow, TrafficGeneratorListener
 {
     Q_OBJECT
 
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    void displayError(QAbstractSocket::SocketError socketError);
+
+    // from TrafficGeneratorListener
+    virtual void GeneratorFinished(QString message);
+    virtual void ShowMessage(QString message);
+    virtual void ShowError(QString message);
 
 public slots:
     void handleConnectButton();
-    void handleDisconnect();
-    void handleConnected();
-    void displayError(QAbstractSocket::SocketError socketError);
 
 private:
     void startConnection();
 
     Ui::MainWindow *ui;
-    QTcpSocket *tcpSocket_;
+    TrafficGenerator *generator_;
 };
 #endif // MAINWINDOW_H

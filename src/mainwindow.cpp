@@ -5,14 +5,13 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , ui(new Ui::MainWindow), tcpSocket_(new QTcpSocket(this))
+    , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
     connect(ui->connectButton, SIGNAL(clicked()), this, SLOT(handleConnectButton()));
-    connect(tcpSocket_, &QAbstractSocket::errorOccurred, this, &MainWindow::displayError);
-    connect(tcpSocket_, &QTcpSocket::connected, this, &MainWindow::handleConnected);
 }
 
 
@@ -24,15 +23,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::handleConnectButton()
 {
-    qDebug() << "handleConnectButton";
     startConnection();
-}
-
-
-void MainWindow::handleDisconnect()
-{
-    QTcpSocket *sock = qobject_cast<QTcpSocket*>(sender());
-    qDebug() << "handleDisconnect called but no matching socket found";
 }
 
 
@@ -40,48 +31,58 @@ void MainWindow::startConnection()
 {
     int port = 0;
     bool ok;
-    ui->portEdit->setValidator(new QIntValidator(1, 65535, this));
 
+    ui->portEdit->setValidator(new QIntValidator(1, 65535, this));
     if (ui->portEdit->text().length() <= 0 || ui->addressEdit->text().length() <= 0) {
         QMessageBox::critical(this, tr("Dice Client"), tr("Invalid input"));
         return;
     }
-    tcpSocket_->connectToHost(QHostAddress(ui->addressEdit->text()), ui->portEdit->text().toInt());
-}
+    ui->bytesEdit->setValidator(new QIntValidator(0, 10000000, this));
+    if (ui->bytesEdit->text().length() <= 0) {
+        QMessageBox::critical(this, tr("Dice Client"), tr("Invalid input"));
+        return;
+    }
+    ui->intervalEdit->setValidator(new QIntValidator(0, 3600 * 1000, this));
+    if (ui->intervalEdit->text().length() <= 0) {
+        QMessageBox::critical(this, tr("Dice Client"), tr("Invalid input"));
+        return;
+    }
+    ui->countEdit->setValidator(new QIntValidator(0, 10000000, this));
+    if (ui->countEdit->text().length() <= 0) {
+        QMessageBox::critical(this, tr("Dice Client"), tr("Invalid input"));
+        return;
+    }
 
-
-void MainWindow::handleConnected()
-{
     ui->activityLabel->setText("Connection is active");
     ui->activityLabel->setStyleSheet("color: green;");
 
-    QByteArray block;
-    QDataStream out(&block, QIODevice::WriteOnly);
-    out << "jepeti jee";
-    tcpSocket_->write(block);
+    generator_ = new TrafficGenerator(
+            *this,
+            QHostAddress(ui->addressEdit->text()),
+            ui->portEdit->text().toInt(),
+            ui->bytesEdit->text().toInt(),
+            ui->intervalEdit->text().toInt(),
+            ui->countEdit->text().toInt());
+    generator_->start();
 }
 
 
-void MainWindow::displayError(QAbstractSocket::SocketError socketError)
+void MainWindow::GeneratorFinished(QString message)
 {
-    switch (socketError) {
-    case QAbstractSocket::RemoteHostClosedError:
-        break;
-    case QAbstractSocket::HostNotFoundError:
-        QMessageBox::information(this, tr("Dice Client"),
-                                 tr("The host was not found. Please check the "
-                                    "host name and port settings."));
-        break;
-    case QAbstractSocket::ConnectionRefusedError:
-        QMessageBox::information(this, tr("Dice Client"),
-                                 tr("The connection was refused by the peer. "
-                                    "Make sure the fortune server is running, "
-                                    "and check that the host name and port "
-                                    "settings are correct."));
-        break;
-    default:
-        QMessageBox::information(this, tr("Dice Client"),
-                                 tr("The following error occurred: %1.")
-                                 .arg(tcpSocket_->errorString()));
-    }
+    ui->activityLabel->setText("Generator Finished: " + message);
+    ui->activityLabel->setStyleSheet("color: red;");
+    //delete generator_;
+}
+
+
+void MainWindow::ShowMessage(QString message)
+{
+    ui->activityLabel->setText(message);
+}
+
+
+void MainWindow::ShowError(QString message)
+{
+    QMessageBox::information(this, tr("Dice Client"),
+        tr("The following error occurred: %1.").arg(message));
 }
