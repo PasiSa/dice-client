@@ -37,7 +37,7 @@ void TrafficGenerator::stop()
 
 void TrafficGenerator::handleConnected()
 {
-    sendBatch();
+    newBatch();
 }
 
 
@@ -57,10 +57,22 @@ void TrafficGenerator::handleDisconnect()
 void TrafficGenerator::handleWritten(qint64 bytes)
 {
     count_ += bytes;
+    block_remaining_ -= bytes;
+
+    // Or should the UI message update be done just once per batch?
     std::stringstream ss;
     ss << "Test ongoing, total bytes written: " << count_;
     listener_.ShowMessage(QString::fromStdString(ss.str()));
-    if (maxcount_ && count_ >= maxcount_ * bytes_) {
+
+    if (block_remaining_ > 0) {
+        // Not all of the block was yet written, possibly due to buffers and flow control.
+        // Continue with sending rest of the block.
+        sendBatch();
+        return;
+    }
+
+    // Start new block after timeout, or terminate if this was the last block
+    if (maxcount_ && block_count_ >= maxcount_) {
         socket_->disconnectFromHost();
         listener_.GeneratorFinished("Success");
     } else {
@@ -71,27 +83,27 @@ void TrafficGenerator::handleWritten(qint64 bytes)
 
 void TrafficGenerator::sendBatch()
 {
-    unsigned int b = bytes_;
+    QByteArray block(block_remaining_, 'A' + (block_count_ % 26));
+    socket_->write(block);
+}
 
+
+void TrafficGenerator::newBatch()
+{
     if (socket_->state() == QAbstractSocket::UnconnectedState ||
             socket_->state() == QAbstractSocket::ClosingState) {
         // If socket is winding down (e.g. interrupted by user), do not send anymore.
         return;
     }
 
-    // It is possible that one of the earlier writes was not able to send
-    // full batch because of full send buffer, therefore we need to check
-    // the balances.
-    if (maxcount_ && maxcount_ * bytes_ - count_ < bytes_) {
-        b = (maxcount_ * bytes_) - count_;
-    }
+    block_remaining_ = bytes_;
+    block_count_++;
 
-    QByteArray block(b, 'A' + (count_ % 26));
-    socket_->write(block);
+    sendBatch();
 }
 
 
 void TrafficGenerator::onTimerTick()
 {
-    sendBatch();
+    newBatch();
 }

@@ -74,15 +74,18 @@ public slots:
 
 private:
     void sendBatch();
+    void newBatch();
 
     TrafficGeneratorListener& listener_;  // UI listener object for notifications
     QHostAddress address_;
     int port_;
     QTcpSocket *socket_;  // Client socket used for sending data
-    unsigned int bytes_;  // Number of bytes in a single write batch
-    unsigned int interval_;  // Interval between batches in milliseconds
-    unsigned int maxcount_;  // How many iterations we are to send in total
-    unsigned int count_;  // How many bytes we have sent so far
+    unsigned int bytes_;  // Number of bytes in a single write block
+    unsigned int interval_;  // Interval between blocks in milliseconds
+    unsigned int maxcount_;  // Number of blocks we are to send in total
+    unsigned int count_;  // Number of bytes we have sent so far
+    unsigned int block_remaining_;  // Number of bytes remaining in the current block
+    unsigned int block_count_;  // Number of blocks sent
 };
 
 #endif  // TRAFFICGENERATOR_H
