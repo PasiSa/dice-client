@@ -37,6 +37,7 @@ void TrafficGenerator::stop()
 
 void TrafficGenerator::handleConnected()
 {
+    block_count_ = 0;
     newBatch();
 }
 
@@ -66,8 +67,7 @@ void TrafficGenerator::handleWritten(qint64 bytes)
 
     if (block_remaining_ > 0) {
         // Not all of the block was yet written, possibly due to buffers and flow control.
-        // Continue with sending rest of the block.
-        sendBatch();
+        // More data should be on its way.
         return;
     }
 
